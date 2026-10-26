@@ -1,5 +1,7 @@
 export default interface Authorization {
-  auth(authorization: AuthorizationModel): Promise<ErrorResponse | undefined>;
+  auth(
+    authorization: AuthorizationModel
+  ): Promise<ErrorResponse | AuthorizationSuccess>;
 }
 
 export interface AuthorizationModel {
@@ -10,6 +12,11 @@ export interface AuthorizationModel {
 export interface ErrorResponse {
   status: number;
   message: string;
+}
+
+export interface AuthorizationSuccess {
+  accessToken: string;
+  name: string;
 }
 
 export interface Account {
