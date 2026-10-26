@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import makeLoginController from '../application/login-controller-factory';
 import makeApp from './app';
 
