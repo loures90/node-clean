@@ -6,12 +6,14 @@ import Authorization, {
 import { HashComparer } from './hashComparer';
 import { LoadAccountByEmailRepository } from './loadAccountByEmailRepository';
 import { TokenGenerator } from './tokenGenerator';
+import { UpdateAccessTokenRepository } from './updateAccessTokenRepository';
 
 export default class DbAuthorization implements Authorization {
   constructor(
     private readonly loadAccountByEmailRepository: LoadAccountByEmailRepository,
     private readonly hashComparer: HashComparer,
-    private readonly tokenGenerator: TokenGenerator
+    private readonly tokenGenerator: TokenGenerator,
+    private readonly updateAccessTokenRepository: UpdateAccessTokenRepository
   ) {}
 
   async auth(
@@ -35,6 +37,10 @@ export default class DbAuthorization implements Authorization {
     }
 
     const accessToken = await this.tokenGenerator.generate(account.id);
+    await this.updateAccessTokenRepository.updateAccessToken(
+      account.id,
+      accessToken
+    );
 
     return { accessToken, name: account.name };
   }
