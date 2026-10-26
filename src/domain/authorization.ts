@@ -12,10 +12,6 @@ export interface ErrorResponse {
   message: string;
 }
 
-export interface LoadAccountByEmailRepository {
-  loadByEmail(email: string): Promise<Account | null>;
-}
-
 export interface Account {
   id: string;
   name: string;

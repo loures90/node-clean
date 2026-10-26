@@ -1,8 +1,8 @@
 import Authorization, {
   AuthorizationModel,
   ErrorResponse,
-  LoadAccountByEmailRepository,
 } from '../domain/authorization';
+import { LoadAccountByEmailRepository } from './loadAccountByEmailRepository';
 
 export default class DbAuthorization implements Authorization {
   constructor(
