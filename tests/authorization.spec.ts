@@ -23,4 +23,21 @@ describe('Authorization', () => {
 
     expect(repository.loadByEmail).toHaveBeenCalledWith('user@example.com');
   });
+
+  test('should return error 401 if the account is not found', async () => {
+    const repository: LoadAccountByEmailRepository = {
+      loadByEmail: jest.fn(async () => null),
+    };
+    const authorization = new DbAuthorization(repository);
+
+    const result = await authorization.auth({
+      email: 'missing@example.com',
+      password: 'password123',
+    });
+
+    expect(result).toEqual({
+      status: 401,
+      message: 'Invalid credentials',
+    });
+  });
 });
