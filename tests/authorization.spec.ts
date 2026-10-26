@@ -2,6 +2,7 @@ import DbAuthorization from '../src/data/authorization';
 import { HashComparer } from '../src/data/hashComparer';
 import { LoadAccountByEmailRepository } from '../src/data/loadAccountByEmailRepository';
 import { TokenGenerator } from '../src/data/tokenGenerator';
+import { UpdateAccessTokenRepository } from '../src/data/updateAccessTokenRepository';
 import { Account } from '../src/domain/authorization';
 
 describe('Authorization', () => {
@@ -15,6 +16,11 @@ describe('Authorization', () => {
     generate: jest.fn(async () => 'generated-token'),
   });
 
+  const createUpdateAccessTokenRepository =
+    (): UpdateAccessTokenRepository => ({
+      updateAccessToken: jest.fn(async () => undefined),
+    });
+
   test('should call LoadAccountByEmailRepository with the provided email', async () => {
     const repository: LoadAccountByEmailRepository = {
       loadByEmail: jest.fn(async () => account),
@@ -25,7 +31,8 @@ describe('Authorization', () => {
     const authorization = new DbAuthorization(
       repository,
       hashComparer,
-      createTokenGenerator()
+      createTokenGenerator(),
+      createUpdateAccessTokenRepository()
     );
 
     await authorization.auth({
@@ -46,7 +53,8 @@ describe('Authorization', () => {
     const authorization = new DbAuthorization(
       repository,
       hashComparer,
-      createTokenGenerator()
+      createTokenGenerator(),
+      createUpdateAccessTokenRepository()
     );
 
     const result = await authorization.auth({
@@ -71,7 +79,8 @@ describe('Authorization', () => {
     const authorization = new DbAuthorization(
       repository,
       hashComparer,
-      createTokenGenerator()
+      createTokenGenerator(),
+      createUpdateAccessTokenRepository()
     );
 
     await authorization.auth({
@@ -95,7 +104,8 @@ describe('Authorization', () => {
     const authorization = new DbAuthorization(
       repository,
       hashComparer,
-      createTokenGenerator()
+      createTokenGenerator(),
+      createUpdateAccessTokenRepository()
     );
 
     const result = await authorization.auth({
@@ -117,10 +127,12 @@ describe('Authorization', () => {
       compare: jest.fn(async () => true),
     };
     const tokenGenerator = createTokenGenerator();
+    const updateAccessTokenRepository = createUpdateAccessTokenRepository();
     const authorization = new DbAuthorization(
       repository,
       hashComparer,
-      tokenGenerator
+      tokenGenerator,
+      updateAccessTokenRepository
     );
 
     const result = await authorization.auth({
@@ -133,5 +145,57 @@ describe('Authorization', () => {
       accessToken: 'generated-token',
       name: 'User Name',
     });
+  });
+
+  test('should return the access token and user name on successful authorization', async () => {
+    const repository: LoadAccountByEmailRepository = {
+      loadByEmail: jest.fn(async () => account),
+    };
+    const hashComparer: HashComparer = {
+      compare: jest.fn(async () => true),
+    };
+    const authorization = new DbAuthorization(
+      repository,
+      hashComparer,
+      createTokenGenerator(),
+      createUpdateAccessTokenRepository()
+    );
+
+    const result = await authorization.auth({
+      email: 'user@example.com',
+      password: 'password123',
+    });
+
+    expect(result).toEqual({
+      accessToken: 'generated-token',
+      name: 'User Name',
+    });
+  });
+
+  test('should update the stored access token with the account id and generated token', async () => {
+    const repository: LoadAccountByEmailRepository = {
+      loadByEmail: jest.fn(async () => account),
+    };
+    const hashComparer: HashComparer = {
+      compare: jest.fn(async () => true),
+    };
+    const tokenGenerator = createTokenGenerator();
+    const updateAccessTokenRepository = createUpdateAccessTokenRepository();
+    const authorization = new DbAuthorization(
+      repository,
+      hashComparer,
+      tokenGenerator,
+      updateAccessTokenRepository
+    );
+
+    await authorization.auth({
+      email: 'user@example.com',
+      password: 'password123',
+    });
+
+    expect(updateAccessTokenRepository.updateAccessToken).toHaveBeenCalledWith(
+      'account-id',
+      'generated-token'
+    );
   });
 });
