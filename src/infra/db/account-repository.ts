@@ -1,36 +1,37 @@
+import { Db, ObjectId } from 'mongodb';
 import { Account } from '../../domain/authorization';
 import { LoadAccountByEmailRepository } from '../../data/loadAccountByEmailRepository';
 import { UpdateAccessTokenRepository } from '../../data/updateAccessTokenRepository';
 
-export interface MockAccount extends Account {
+export interface MongoAccountDocument {
+  _id: ObjectId;
   email: string;
+  name: string;
+  passwordHash: string;
   accessToken?: string;
+}
+
+export interface AccountCollection {
+  findOne(filter: { email: string }): Promise<MongoAccountDocument | null>;
+  updateOne(
+    filter: { _id: ObjectId },
+    update: { $set: { accessToken: string } }
+  ): Promise<{ matchedCount: number }>;
 }
 
 export default class AccountRepository
   implements LoadAccountByEmailRepository, UpdateAccessTokenRepository
 {
-  constructor(
-    private readonly accounts: MockAccount[] = [
-      {
-        id: 'account-id',
-        email: 'user@example.com',
-        name: 'User Name',
-        passwordHash: 'hashed-password',
-      },
-    ]
-  ) {}
+  constructor(private readonly accounts: AccountCollection) {}
 
   async loadByEmail(email: string): Promise<Account | null> {
-    const account = this.accounts.find(
-      (storedAccount) => storedAccount.email === email
-    );
+    const account = await this.accounts.findOne({ email });
     if (!account) {
       return null;
     }
 
     return {
-      id: account.id,
+      id: account._id.toHexString(),
       name: account.name,
       passwordHash: account.passwordHash,
     };
@@ -40,11 +41,23 @@ export default class AccountRepository
     accountId: string,
     accessToken: string
   ): Promise<void> {
-    const account = this.accounts.find(
-      (storedAccount) => storedAccount.id === accountId
+    const result = await this.accounts.updateOne(
+      { _id: new ObjectId(accountId) },
+      { $set: { accessToken } }
     );
-    if (account) {
-      account.accessToken = accessToken;
+
+    if (result.matchedCount !== 1) {
+      throw new Error(
+        `Account ${accountId} was not found while updating token`
+      );
     }
   }
 }
+
+export const createMongoAccountRepository = (
+  database: Db,
+  collectionName = 'accounts'
+): AccountRepository =>
+  new AccountRepository(
+    database.collection<MongoAccountDocument>(collectionName)
+  );
