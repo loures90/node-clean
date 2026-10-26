@@ -5,59 +5,66 @@ import { TokenGenerator } from '../src/data/tokenGenerator';
 import { UpdateAccessTokenRepository } from '../src/data/updateAccessTokenRepository';
 import { Account } from '../src/domain/authorization';
 
-describe('Authorization', () => {
-  const account: Account = {
-    id: 'account-id',
-    name: 'User Name',
-    passwordHash: 'hashed-password',
+const account: Account = {
+  id: 'account-id',
+  name: 'User Name',
+  passwordHash: 'hashed-password',
+};
+
+const makeSut = ({
+  accountToLoad = account,
+  passwordIsValid = true,
+}: {
+  accountToLoad?: Account | null;
+  passwordIsValid?: boolean;
+} = {}) => {
+  const loadAccountByEmailRepository: LoadAccountByEmailRepository = {
+    loadByEmail: jest.fn(async (_email: string) => accountToLoad),
   };
+  const hashComparer: HashComparer = {
+    compare: jest.fn(
+      async (_password: string, _hashedPassword: string) => passwordIsValid
+    ),
+  };
+  const tokenGenerator: TokenGenerator = {
+    generate: jest.fn(async (_accountId: string) => 'generated-token'),
+  };
+  const updateAccessTokenRepository: UpdateAccessTokenRepository = {
+    updateAccessToken: jest.fn(
+      async (_accountId: string, _accessToken: string) => undefined
+    ),
+  };
+  const sut = new DbAuthorization(
+    loadAccountByEmailRepository,
+    hashComparer,
+    tokenGenerator,
+    updateAccessTokenRepository
+  );
 
-  const createTokenGenerator = (): TokenGenerator => ({
-    generate: jest.fn(async () => 'generated-token'),
-  });
+  return {
+    sut,
+    loadAccountByEmailRepository,
+    hashComparer,
+    tokenGenerator,
+    updateAccessTokenRepository,
+  };
+};
 
-  const createUpdateAccessTokenRepository =
-    (): UpdateAccessTokenRepository => ({
-      updateAccessToken: jest.fn(async () => undefined),
-    });
-
+describe('DbAuthorization', () => {
   test('should call LoadAccountByEmailRepository with the provided email', async () => {
-    const repository: LoadAccountByEmailRepository = {
-      loadByEmail: jest.fn(async () => account),
-    };
-    const hashComparer: HashComparer = {
-      compare: jest.fn(async () => true),
-    };
-    const authorization = new DbAuthorization(
-      repository,
-      hashComparer,
-      createTokenGenerator(),
-      createUpdateAccessTokenRepository()
+    const { sut, loadAccountByEmailRepository } = makeSut();
+
+    await sut.auth({ email: 'user@example.com', password: 'password123' });
+
+    expect(loadAccountByEmailRepository.loadByEmail).toHaveBeenCalledWith(
+      'user@example.com'
     );
-
-    await authorization.auth({
-      email: 'user@example.com',
-      password: 'password123',
-    });
-
-    expect(repository.loadByEmail).toHaveBeenCalledWith('user@example.com');
   });
 
   test('should return error 401 if the account is not found', async () => {
-    const repository: LoadAccountByEmailRepository = {
-      loadByEmail: jest.fn(async () => null),
-    };
-    const hashComparer: HashComparer = {
-      compare: jest.fn(async () => true),
-    };
-    const authorization = new DbAuthorization(
-      repository,
-      hashComparer,
-      createTokenGenerator(),
-      createUpdateAccessTokenRepository()
-    );
+    const { sut, hashComparer } = makeSut({ accountToLoad: null });
 
-    const result = await authorization.auth({
+    const result = await sut.auth({
       email: 'missing@example.com',
       password: 'password123',
     });
@@ -70,23 +77,9 @@ describe('Authorization', () => {
   });
 
   test('should call HashComparer with the provided password and stored hash', async () => {
-    const repository: LoadAccountByEmailRepository = {
-      loadByEmail: jest.fn(async () => account),
-    };
-    const hashComparer: HashComparer = {
-      compare: jest.fn(async () => true),
-    };
-    const authorization = new DbAuthorization(
-      repository,
-      hashComparer,
-      createTokenGenerator(),
-      createUpdateAccessTokenRepository()
-    );
+    const { sut, hashComparer } = makeSut();
 
-    await authorization.auth({
-      email: 'user@example.com',
-      password: 'client-password',
-    });
+    await sut.auth({ email: 'user@example.com', password: 'client-password' });
 
     expect(hashComparer.compare).toHaveBeenCalledWith(
       'client-password',
@@ -95,20 +88,9 @@ describe('Authorization', () => {
   });
 
   test('should return error 401 if the password does not match the stored hash', async () => {
-    const repository: LoadAccountByEmailRepository = {
-      loadByEmail: jest.fn(async () => account),
-    };
-    const hashComparer: HashComparer = {
-      compare: jest.fn(async () => false),
-    };
-    const authorization = new DbAuthorization(
-      repository,
-      hashComparer,
-      createTokenGenerator(),
-      createUpdateAccessTokenRepository()
-    );
+    const { sut } = makeSut({ passwordIsValid: false });
 
-    const result = await authorization.auth({
+    const result = await sut.auth({
       email: 'user@example.com',
       password: 'wrong-password',
     });
@@ -120,48 +102,17 @@ describe('Authorization', () => {
   });
 
   test('should call TokenGenerator with the account id', async () => {
-    const repository: LoadAccountByEmailRepository = {
-      loadByEmail: jest.fn(async () => account),
-    };
-    const hashComparer: HashComparer = {
-      compare: jest.fn(async () => true),
-    };
-    const tokenGenerator = createTokenGenerator();
-    const updateAccessTokenRepository = createUpdateAccessTokenRepository();
-    const authorization = new DbAuthorization(
-      repository,
-      hashComparer,
-      tokenGenerator,
-      updateAccessTokenRepository
-    );
+    const { sut, tokenGenerator } = makeSut();
 
-    const result = await authorization.auth({
-      email: 'user@example.com',
-      password: 'password123',
-    });
+    await sut.auth({ email: 'user@example.com', password: 'password123' });
 
     expect(tokenGenerator.generate).toHaveBeenCalledWith('account-id');
-    expect(result).toEqual({
-      accessToken: 'generated-token',
-      name: 'User Name',
-    });
   });
 
   test('should return the access token and user name on successful authorization', async () => {
-    const repository: LoadAccountByEmailRepository = {
-      loadByEmail: jest.fn(async () => account),
-    };
-    const hashComparer: HashComparer = {
-      compare: jest.fn(async () => true),
-    };
-    const authorization = new DbAuthorization(
-      repository,
-      hashComparer,
-      createTokenGenerator(),
-      createUpdateAccessTokenRepository()
-    );
+    const { sut } = makeSut();
 
-    const result = await authorization.auth({
+    const result = await sut.auth({
       email: 'user@example.com',
       password: 'password123',
     });
@@ -173,25 +124,9 @@ describe('Authorization', () => {
   });
 
   test('should update the stored access token with the account id and generated token', async () => {
-    const repository: LoadAccountByEmailRepository = {
-      loadByEmail: jest.fn(async () => account),
-    };
-    const hashComparer: HashComparer = {
-      compare: jest.fn(async () => true),
-    };
-    const tokenGenerator = createTokenGenerator();
-    const updateAccessTokenRepository = createUpdateAccessTokenRepository();
-    const authorization = new DbAuthorization(
-      repository,
-      hashComparer,
-      tokenGenerator,
-      updateAccessTokenRepository
-    );
+    const { sut, updateAccessTokenRepository } = makeSut();
 
-    await authorization.auth({
-      email: 'user@example.com',
-      password: 'password123',
-    });
+    await sut.auth({ email: 'user@example.com', password: 'password123' });
 
     expect(updateAccessTokenRepository.updateAccessToken).toHaveBeenCalledWith(
       'account-id',
