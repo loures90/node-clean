@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "rimraf dist && tsc",
+    "start": "tsx src/main/server.ts",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --passWithNoTests --no-cache --runInBand",
     "test:watch": "npm test -- --watch",
     "test:unit": "npm test -- --testMatch='**/*.spec.ts'",
@@ -30,8 +31,10 @@
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "@eslint/js": "^9.0.0",
+    "@types/express": "^5.0.6",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.0",
+    "@types/supertest": "^7.2.1",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.1.0",
     "husky": "^9.1.7",
@@ -39,6 +42,7 @@
     "lint-staged": "^17.6.0",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",
+    "supertest": "^7.3.1",
     "ts-jest": "^29.1.2",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3",
@@ -46,6 +50,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "express": "^5.3.0",
     "jose": "^6.2.13",
     "mongodb": "^7.7.0"
   }
