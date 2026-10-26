@@ -3,15 +3,30 @@ import Authorization from '../../src/domain/authorization';
 import LoginController from '../../src/presentation/login-controller';
 import { EmailValidator } from '../../src/presentation/protocols/email-validator';
 
-const makeSut = (emailIsValid = true) => {
+const makeSut = ({
+  emailIsValid = true,
+  emailValidatorThrows = false,
+  authorizationThrows = false,
+}: {
+  emailIsValid?: boolean;
+  emailValidatorThrows?: boolean;
+  authorizationThrows?: boolean;
+} = {}) => {
   const emailValidator: EmailValidator = {
-    isValid: jest.fn((_email: string) => emailIsValid),
+    isValid: jest.fn((_email: string) => {
+      if (emailValidatorThrows) {
+        throw new Error('email validator failed');
+      }
+      return emailIsValid;
+    }),
   };
   const authorization: Authorization = {
-    auth: jest.fn(async (_credentials) => ({
-      accessToken: 'generated-token',
-      name: 'User Name',
-    })),
+    auth: jest.fn(async (_credentials) => {
+      if (authorizationThrows) {
+        throw new Error('authorization failed');
+      }
+      return { accessToken: 'generated-token', name: 'User Name' };
+    }),
   };
   const sut = new LoginController(emailValidator, authorization);
 
@@ -44,7 +59,9 @@ describe('LoginController', () => {
   });
 
   test('returns 400 when email is invalid', async () => {
-    const { sut, emailValidator, authorization } = makeSut(false);
+    const { sut, emailValidator, authorization } = makeSut({
+      emailIsValid: false,
+    });
 
     const response = await sut.handle({
       body: { email: 'invalid-email', password: 'password123' },
@@ -73,6 +90,33 @@ describe('LoginController', () => {
     expect(response).toEqual({
       statusCode: 200,
       body: { accessToken: 'generated-token', name: 'User Name' },
+    });
+  });
+
+  test('returns 500 when the email validator throws', async () => {
+    const { sut, authorization } = makeSut({ emailValidatorThrows: true });
+
+    const response = await sut.handle({
+      body: { email: 'user@example.com', password: 'password123' },
+    });
+
+    expect(response).toEqual({
+      statusCode: 500,
+      body: { message: 'Internal server error' },
+    });
+    expect(authorization.auth).not.toHaveBeenCalled();
+  });
+
+  test('returns 500 when authorization throws an infrastructure error', async () => {
+    const { sut } = makeSut({ authorizationThrows: true });
+
+    const response = await sut.handle({
+      body: { email: 'user@example.com', password: 'password123' },
+    });
+
+    expect(response).toEqual({
+      statusCode: 500,
+      body: { message: 'Internal server error' },
     });
   });
 });

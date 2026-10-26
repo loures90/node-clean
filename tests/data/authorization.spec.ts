@@ -15,24 +15,44 @@ const account: Account = {
 const makeSut = ({
   accountToLoad = account,
   passwordIsValid = true,
+  failureAt,
 }: {
   accountToLoad?: Account | null;
   passwordIsValid?: boolean;
+  failureAt?:
+    'loadAccount' | 'comparePassword' | 'generateToken' | 'updateToken';
 } = {}) => {
   const loadAccountByEmailRepository: LoadAccountByEmailRepository = {
-    loadByEmail: jest.fn(async (_email: string) => accountToLoad),
+    loadByEmail: jest.fn(async (_email: string) => {
+      if (failureAt === 'loadAccount') {
+        throw new Error('database lookup failed');
+      }
+      return accountToLoad;
+    }),
   };
   const hashComparer: HashComparer = {
-    compare: jest.fn(
-      async (_password: string, _hashedPassword: string) => passwordIsValid
-    ),
+    compare: jest.fn(async (_password: string, _hashedPassword: string) => {
+      if (failureAt === 'comparePassword') {
+        throw new Error('password comparison failed');
+      }
+      return passwordIsValid;
+    }),
   };
   const tokenGenerator: TokenGenerator = {
-    generate: jest.fn(async (_accountId: string) => 'generated-token'),
+    generate: jest.fn(async (_accountId: string) => {
+      if (failureAt === 'generateToken') {
+        throw new Error('token generation failed');
+      }
+      return 'generated-token';
+    }),
   };
   const updateAccessTokenRepository: UpdateAccessTokenRepository = {
     updateAccessToken: jest.fn(
-      async (_accountId: string, _accessToken: string) => undefined
+      async (_accountId: string, _accessToken: string) => {
+        if (failureAt === 'updateToken') {
+          throw new Error('token update failed');
+        }
+      }
     ),
   };
   const sut = new DbAuthorization(
@@ -134,4 +154,20 @@ describe('DbAuthorization', () => {
       'generated-token'
     );
   });
+
+  test.each([
+    ['database lookup', 'loadAccount'],
+    ['password comparison', 'comparePassword'],
+    ['token generation', 'generateToken'],
+    ['access token update', 'updateToken'],
+  ] as const)(
+    'propagates errors from the %s dependency',
+    async (_description, failureAt) => {
+      const { sut } = makeSut({ failureAt });
+
+      await expect(
+        sut.auth({ email: 'user@example.com', password: 'password123' })
+      ).rejects.toThrow();
+    }
+  );
 });
