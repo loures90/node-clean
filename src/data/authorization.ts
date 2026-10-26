@@ -2,11 +2,13 @@ import Authorization, {
   AuthorizationModel,
   ErrorResponse,
 } from '../domain/authorization';
+import { HashComparer } from './hashComparer';
 import { LoadAccountByEmailRepository } from './loadAccountByEmailRepository';
 
 export default class DbAuthorization implements Authorization {
   constructor(
-    private readonly loadAccountByEmailRepository: LoadAccountByEmailRepository
+    private readonly loadAccountByEmailRepository: LoadAccountByEmailRepository,
+    private readonly hashComparer: HashComparer
   ) {}
 
   async auth(
@@ -17,6 +19,15 @@ export default class DbAuthorization implements Authorization {
     );
 
     if (!account) {
+      return { status: 401, message: 'Invalid credentials' };
+    }
+
+    const passwordIsValid = await this.hashComparer.compare(
+      authorization.password,
+      account.passwordHash
+    );
+
+    if (!passwordIsValid) {
       return { status: 401, message: 'Invalid credentials' };
     }
   }
