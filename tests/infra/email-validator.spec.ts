@@ -1,4 +1,4 @@
-import SimpleEmailValidator from '../src/infra/email-validator';
+import SimpleEmailValidator from '../../src/infra/email-validator';
 
 describe('SimpleEmailValidator', () => {
   const sut = new SimpleEmailValidator();

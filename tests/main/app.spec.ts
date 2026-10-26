@@ -1,8 +1,11 @@
 import { jest } from '@jest/globals';
 import request from 'supertest';
-import makeApp from '../src/main/app';
-import { Controller } from '../src/presentation/protocols/controller';
-import { HttpRequest, HttpResponse } from '../src/presentation/protocols/http';
+import makeApp from '../../src/main/app';
+import { Controller } from '../../src/presentation/protocols/controller';
+import {
+  HttpRequest,
+  HttpResponse,
+} from '../../src/presentation/protocols/http';
 
 describe('POST /api/login', () => {
   test('forwards the request body to the login controller and returns its response', async () => {

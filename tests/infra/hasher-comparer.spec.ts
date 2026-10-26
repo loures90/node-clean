@@ -1,5 +1,5 @@
 import { hash } from 'bcryptjs';
-import BcryptHashComparer from '../src/infra/hasher-comparer';
+import BcryptHashComparer from '../../src/infra/hasher-comparer';
 
 describe('BcryptHashComparer', () => {
   test('returns true when the value matches the hash', async () => {

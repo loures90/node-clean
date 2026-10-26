@@ -1,10 +1,10 @@
 import { jest } from '@jest/globals';
-import DbAuthorization from '../src/data/authorization';
-import { HashComparer } from '../src/data/hashComparer';
-import { LoadAccountByEmailRepository } from '../src/data/loadAccountByEmailRepository';
-import { TokenGenerator } from '../src/data/tokenGenerator';
-import { UpdateAccessTokenRepository } from '../src/data/updateAccessTokenRepository';
-import { Account } from '../src/domain/authorization';
+import DbAuthorization from '../../src/data/authorization';
+import { HashComparer } from '../../src/data/hashComparer';
+import { LoadAccountByEmailRepository } from '../../src/data/loadAccountByEmailRepository';
+import { TokenGenerator } from '../../src/data/tokenGenerator';
+import { UpdateAccessTokenRepository } from '../../src/data/updateAccessTokenRepository';
+import { Account } from '../../src/domain/authorization';
 
 const account: Account = {
   id: 'account-id',

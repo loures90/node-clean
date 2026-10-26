@@ -1,5 +1,5 @@
 import { jwtVerify } from 'jose';
-import JoseTokenGenerator from '../src/infra/token-generator';
+import JoseTokenGenerator from '../../src/infra/token-generator';
 
 const secret = 'test-secret-with-at-least-32-bytes-long';
 

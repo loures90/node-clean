@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
-import Authorization from '../src/domain/authorization';
-import LoginController from '../src/presentation/login-controller';
-import { EmailValidator } from '../src/presentation/protocols/email-validator';
+import Authorization from '../../src/domain/authorization';
+import LoginController from '../../src/presentation/login-controller';
+import { EmailValidator } from '../../src/presentation/protocols/email-validator';
 
 const makeSut = (emailIsValid = true) => {
   const emailValidator: EmailValidator = {

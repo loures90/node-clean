@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import AccountRepository, {
   AccountCollection,
   MongoAccountDocument,
-} from '../src/infra/db/account-repository';
+} from '../../../src/infra/db/account-repository';
 
 describe('AccountRepository', () => {
   const makeAccountDocument = (): MongoAccountDocument => ({
