@@ -1,10 +1,15 @@
 export default interface Authorization {
-  auth(authorization: AuthorizationModel): Promise<void>;
+  auth(authorization: AuthorizationModel): Promise<ErrorResponse | undefined>;
 }
 
 export interface AuthorizationModel {
   email: string;
   password: string;
+}
+
+export interface ErrorResponse {
+  status: number;
+  message: string;
 }
 
 export interface LoadAccountByEmailRepository {

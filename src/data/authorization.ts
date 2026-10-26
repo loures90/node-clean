@@ -1,5 +1,6 @@
 import Authorization, {
   AuthorizationModel,
+  ErrorResponse,
   LoadAccountByEmailRepository,
 } from '../domain/authorization';
 
@@ -8,7 +9,15 @@ export default class DbAuthorization implements Authorization {
     private readonly loadAccountByEmailRepository: LoadAccountByEmailRepository
   ) {}
 
-  async auth(authorization: AuthorizationModel): Promise<void> {
-    await this.loadAccountByEmailRepository.loadByEmail(authorization.email);
+  async auth(
+    authorization: AuthorizationModel
+  ): Promise<ErrorResponse | undefined> {
+    const account = await this.loadAccountByEmailRepository.loadByEmail(
+      authorization.email
+    );
+
+    if (!account) {
+      return { status: 401, message: 'Invalid credentials' };
+    }
   }
 }
