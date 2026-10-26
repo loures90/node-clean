@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "rimraf dist && tsc",
-    "test": "jest --passWithNoTests --no-cache --runInBand",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --passWithNoTests --no-cache --runInBand",
     "test:watch": "npm test -- --watch",
     "test:unit": "npm test -- --testMatch='**/*.spec.ts'",
     "test:integration": "npm test -- --testMatch='**/*.test.ts'",
@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "jose": "^6.2.13",
     "mongodb": "^7.7.0"
   }
 }
