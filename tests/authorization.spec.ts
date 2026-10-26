@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import DbAuthorization from '../src/data/authorization';
 import { HashComparer } from '../src/data/hashComparer';
 import { LoadAccountByEmailRepository } from '../src/data/loadAccountByEmailRepository';
