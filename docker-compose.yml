@@ -10,10 +10,41 @@ services:
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: ['CMD', 'mongosh', '--quiet', '--eval', 'db.adminCommand("ping").ok']
+      test:
+        ['CMD', 'mongosh', '--quiet', '--eval', 'db.adminCommand("ping").ok']
       interval: 5s
       timeout: 5s
       retries: 10
+
+  seed:
+    build: .
+    command: ['npm', 'run', 'seed']
+    restart: 'no'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-signup}
+      MONGODB_URI: mongodb://${MONGODB_ROOT_USERNAME:-signup_dev}:${MONGODB_ROOT_PASSWORD:-signup_dev_password}@mongodb:27017/${MONGODB_DATABASE:-signup}?authSource=admin
+      SEED_USER_EMAIL: ${SEED_USER_EMAIL:?Set SEED_USER_EMAIL in .env}
+      SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:?Set SEED_USER_PASSWORD in .env}
+      SEED_USER_NAME: ${SEED_USER_NAME:-User Name}
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+    environment:
+      PORT: 3000
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-signup}
+      MONGODB_URI: mongodb://${MONGODB_ROOT_USERNAME:-signup_dev}:${MONGODB_ROOT_PASSWORD:-signup_dev_password}@mongodb:27017/${MONGODB_DATABASE:-signup}?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+    ports:
+      - '${PORT:-3000}:3000'
 
 volumes:
   mongodb_data:

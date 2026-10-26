@@ -6,6 +6,7 @@
   "scripts": {
     "build": "rimraf dist && tsc",
     "start": "tsx src/main/server.ts",
+    "seed": "tsx src/main/seed-user.ts",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --passWithNoTests --no-cache --runInBand",
     "test:watch": "npm test -- --watch",
     "test:unit": "npm test -- --testMatch='**/*.spec.ts'",
