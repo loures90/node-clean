@@ -1,7 +1,7 @@
 import { Db, ObjectId } from 'mongodb';
 import { Account } from '../../domain/authorization';
-import { LoadAccountByEmailRepository } from '../../data/loadAccountByEmailRepository';
-import { UpdateAccessTokenRepository } from '../../data/updateAccessTokenRepository';
+import { LoadAccountByEmailRepository } from '../../data/protocols/loadAccountByEmailRepository';
+import { UpdateAccessTokenRepository } from '../../data/protocols/updateAccessTokenRepository';
 
 export interface MongoAccountDocument {
   _id: ObjectId;

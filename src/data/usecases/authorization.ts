@@ -3,11 +3,11 @@ import Authorization, {
   AuthorizationModel,
   ErrorResponse,
   Account,
-} from '../domain/authorization';
-import { HashComparer } from './hashComparer';
-import { LoadAccountByEmailRepository } from './loadAccountByEmailRepository';
-import { TokenGenerator } from './tokenGenerator';
-import { UpdateAccessTokenRepository } from './updateAccessTokenRepository';
+} from '../../domain/authorization';
+import { HashComparer } from '../protocols/hashComparer';
+import { LoadAccountByEmailRepository } from '../protocols/loadAccountByEmailRepository';
+import { TokenGenerator } from '../protocols/tokenGenerator';
+import { UpdateAccessTokenRepository } from '../protocols/updateAccessTokenRepository';
 
 export default class DbAuthorization implements Authorization {
   constructor(

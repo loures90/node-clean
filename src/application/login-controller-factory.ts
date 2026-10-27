@@ -1,4 +1,4 @@
-import DbAuthorization from '../data/authorization';
+import DbAuthorization from '../data/usecases/authorization';
 import BcryptHashComparer from '../infra/hasher-comparer';
 import AccountRepository, {
   createMongoAccountRepository,

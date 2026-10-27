@@ -1,5 +1,5 @@
 import { SignJWT } from 'jose';
-import { TokenGenerator } from '../data/tokenGenerator';
+import { TokenGenerator } from '../data/protocols/tokenGenerator';
 
 export default class JoseTokenGenerator implements TokenGenerator {
   private readonly key: Uint8Array;
