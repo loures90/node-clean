@@ -7,19 +7,27 @@ import { createMongoConnectionFromEnvironment } from '../infra/db/mongodb-connec
 import SimpleEmailValidator from '../infra/email-validator';
 import { createJoseTokenGeneratorFromEnvironment } from '../infra/token-generator';
 import LoginController from '../presentation/login-controller';
+import { createMongoLogErrorRepository } from '../infra/db/log-error-repository';
+import { LogControllerDecorator } from '../main/log-decorator';
+import { Controller } from '../presentation/protocols/controller';
 
-export default async function makeLoginController(): Promise<LoginController> {
+export default async function makeLoginController(): Promise<Controller> {
   const tokenGenerator = createJoseTokenGeneratorFromEnvironment();
   const connection = createMongoConnectionFromEnvironment();
   const database = await connection.connect();
   const accountRepository: AccountRepository =
     createMongoAccountRepository(database);
+  const logErrorRepository = createMongoLogErrorRepository(database);
+
   const authorization = new DbAuthorization(
     accountRepository,
     new BcryptHashComparer(),
     tokenGenerator,
     accountRepository
   );
-
-  return new LoginController(new SimpleEmailValidator(), authorization);
+  const controller = new LoginController(
+    new SimpleEmailValidator(),
+    authorization
+  );
+  return new LogControllerDecorator(controller, logErrorRepository);
 }
