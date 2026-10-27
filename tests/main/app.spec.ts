@@ -54,3 +54,33 @@ describe('POST /api/login', () => {
     expect(response.body).toEqual({ message: 'email is invalid' });
   });
 });
+
+describe('Swagger documentation', () => {
+  const controller: Controller = {
+    handle: jest.fn(async () => ({
+      statusCode: 200,
+      body: { accessToken: 'generated-token', name: 'User Name' },
+    })),
+  };
+
+  test('serves the OpenAPI document as JSON', async () => {
+    const app = makeApp(controller);
+
+    const response = await request(app).get('/api-docs.json');
+
+    expect(response.status).toBe(200);
+    expect(response.body.openapi).toBe('3.0.3');
+    expect(
+      response.body.paths['/api/login'].post.responses['200']
+    ).toBeDefined();
+  });
+
+  test('serves the Swagger UI', async () => {
+    const app = makeApp(controller);
+
+    const response = await request(app).get('/api-docs/');
+
+    expect(response.status).toBe(200);
+    expect(response.text).toContain('Swagger UI');
+  });
+});
